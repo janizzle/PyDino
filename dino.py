@@ -41,6 +41,9 @@ class Main():
             
             elif e.getKeyCode() == 40:
                 game.dino.setIsDucking(True)
+            
+            elif e.getKeyCode() == 78:
+                game.dino.setIsNaruto(True)
         else:
             if e.getKeyCode() == 32:
                 self.welcome.start()
@@ -102,13 +105,13 @@ class Game():
 
     def onAct(self):        
         if self.count == 40:
-            cactus = Cactus()
+            '''cactus = Cactus()
             addActor(cactus, Location(int(CONS.GAME_W + 20), 322))
-            self.dino.addColActor(cactus)
+            self.dino.addColActor(cactus)'''
             
-            '''bird = Bird()
+            bird = Bird()
             addActor(bird, Location(int(CONS.GAME_W + 20), 260))
-            self.dino.addColActor(bird)'''   
+            self.dino.addColActor(bird)  
         
             self.count = 0
         else:
@@ -146,6 +149,7 @@ class Floor(Actor):
 #dino actor class, inherits functions from existing actor class
 class Dino(Actor):
     def __init__(self):
+        self.isNaruto = False
         self.isJumping = False
         self.jmpMaxReached = False
         self.isDucking = False
@@ -164,7 +168,10 @@ class Dino(Actor):
     
     def act(self):
         if self.isJumping:
-            self.show(4)
+            if not self.isNaruto:
+                self.show(4)
+            else:
+                self.show(0) #naruto pic here
             
             if self.getY() >= CONS.JMP_MAX and not self.jmpMaxReached:
                 self.setY(self.getY() - 20)
@@ -176,28 +183,47 @@ class Dino(Actor):
             elif self.getY() >= 350:
                 self.jmpMaxReached = False
                 self.isJumping = False
-                self.show(0)
+                
+                if not self.isNaruto:
+                    self.show(0)
+                else:
+                    self.show(0) #naruto pic here
                                             
         elif self.isDucking:
             self.setLocation(Location(175, 343))
             if self.getIdVisible() != 2:
-                self.show(2)
+                if not self.isNaruto:
+                    self.show(2)
+                else:
+                    self.show(0) #naruto pic here
             else:
-                self.show(3)    
+                if not self.isNaruto:
+                    self.show(3)
+                else:
+                    self.show(0) #naruto pic here  
     
         else:
             self.setLocation(Location(175, 325))
             #playTone([("c'e'g'f''g'e'c'", 50)])
             if self.getIdVisible() != 1:
-                self.show(1)
+                if not self.isNaruto:
+                    self.show(1)
+                else:
+                    self.show(0) #naruto pic here
             else:
-                self.show(0)
+                if not self.isNaruto:
+                    self.show(0)
+                else:
+                    self.show(0) #naruto pic here
 
     def setIsJumping(self, isJumping):
         self.isJumping = isJumping
 
     def setIsDucking(self, isDucking):
         self.isDucking = isDucking
+        
+    def setIsNaruto(self, isNaruto):
+        self.isNaruto = isNaruto
 
     def addColActor(self, actor):
         self.addCollisionActor(actor)
@@ -294,8 +320,9 @@ class Text(Actor):
 #Game over screen
 class GameOver():
     def __init__(self):
+        global game
         print("game over")
-        #del game
+        del game
 
 #Highscores screen
 class Highscores():
