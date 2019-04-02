@@ -1,3 +1,16 @@
+'''
+===================================
+== Authors:          Manta Tanisha,
+==                   ... Besnik,
+==                   ... Chiara
+== Project:          PyDino
+== Filename:         dino.py
+== Created @:        7. April 2019
+== Last modified @:  10. April 2019
+===================================
+'''
+
+
 import sys
 import random
 from gamegrid import *
@@ -8,11 +21,10 @@ class CONS():
     GAME_W  = 1000
     GAME_H  = 400
     SPEED   = 100
-    OBJ_SPEED = 0.02
-    BLACK   = 000000
+    OBJ_SPEED = 0.05
     DELAY   = 1
     JMP_KEY = 32
-    JMP_MAX = 100
+    JMP_MAX = 75
     DUK_KEY = 40
     BIRD_Y  = 200
     BTN_W   = 200
@@ -24,7 +36,7 @@ class Main():
         makeGameGrid(CONS.GAME_W,
                          CONS.GAME_H,
                          1,
-                         Color(CONS.BLACK),
+                         Color.black,
                          None,
                          False,
                          keyPressed = self.keyPressed,
@@ -103,15 +115,23 @@ class Game():
     def newFloor(self):
         addActor(Floor(), Location(1450, 375))
 
-    def onAct(self):        
+    def onAct(self):
+        CONS.OBJ_SPEED += 0.0001  
+              
         if self.count == 40:
-            '''cactus = Cactus()
-            addActor(cactus, Location(int(CONS.GAME_W + 20), 322))
-            self.dino.addColActor(cactus)'''
             
-            bird = Bird()
-            addActor(bird, Location(int(CONS.GAME_W + 20), 260))
-            self.dino.addColActor(bird)  
+            if random.randint(1, 2) == 1:
+                print("called")
+                for i in range(0, random.randint(1, 3)):
+                    print("entered loop")
+                    cactus = Cactus()
+                    addActor(cactus, Location(int(CONS.GAME_W + (i * 50)), 322))
+                    self.dino.addColActor(cactus)
+            
+            else:
+                bird = Bird()
+                addActor(bird, Location(int(CONS.GAME_W + 20), 260))
+                self.dino.addColActor(bird)  
         
             self.count = 0
         else:
@@ -152,13 +172,20 @@ class Dino(Actor):
         self.isNaruto = False
         self.isJumping = False
         self.jmpMaxReached = False
+        self.jmpAnimation = 1
         self.isDucking = False
+        self.vy = 10
         
         Actor.__init__(self, ["sprites/dino_w_1.png",
                               "sprites/dino_w_2.png",
                               "sprites/dino_d_1.png",
                               "sprites/dino_d_2.png",
                               "sprites/dino_j.png"])
+
+    def reset(self):
+        self.px = self.getX()
+        self.py = self.getY()
+        
                               
     def collide(self, a1, a2):
         removeAllActors()
@@ -173,16 +200,23 @@ class Dino(Actor):
             else:
                 self.show(0) #naruto pic here
             
-            if self.getY() >= CONS.JMP_MAX and not self.jmpMaxReached:
-                self.setY(self.getY() - 20)
+            if self.getY() > CONS.JMP_MAX and not self.jmpMaxReached:
+                self.jmpAnimation += 0.5
+                self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
+                self.py = self.py - (self.vy - self.jmpAnimation) * self.dt
+                self.setLocation(Location(int(self.px), int(self.py)))
                 
-            elif self.getY() < 350:
-                self.jmpMaxReached = True
-                self.setY(self.getY() + 30)
-                
-            elif self.getY() >= 350:
+            elif self.getY() >= 310:
                 self.jmpMaxReached = False
                 self.isJumping = False
+                self.jmpAnimation = 1
+            
+            else:
+                self.jmpAnimation -= 0.5
+                self.jmpMaxReached = True
+                self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
+                self.py = self.py + (self.vy - self.jmpAnimation) * self.dt
+                self.setLocation(Location(int(self.px), int(self.py)))
                 
                 if not self.isNaruto:
                     self.show(0)
@@ -216,6 +250,7 @@ class Dino(Actor):
                 else:
                     self.show(0) #naruto pic here
 
+
     def setIsJumping(self, isJumping):
         self.isJumping = isJumping
 
@@ -231,9 +266,12 @@ class Dino(Actor):
 #cactus actor class, iherits functions from existing actor class
 class Cactus(Actor):
     def __init__(self):
-        Actor.__init__(self, ["sprites/cactus_1.png"])
+        Actor.__init__(self, ["sprites/cactus_1.png",
+                              "sprites/cactus_2.png",
+                              "sprites/cactus_3.png",
+                              "sprites/cactus_4.png"])
         self.vx = 10
-        self.show(0)
+        self.show(random.randint(0, 3))
 
     def reset(self):
         self.px = self.getX()
@@ -279,7 +317,7 @@ class Bird(Actor):
         self.destroy()
 
     def destroy(self):
-        if not self.isInGrid():
+        if self.getX <= 900 and not self.isInGrid():
             self.removeSelf()
 
 #dino on welcome screen
