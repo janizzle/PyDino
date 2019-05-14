@@ -53,9 +53,7 @@ class Main():
             
             elif e.getKeyCode() == 40:
                 game.dino.setIsDucking(True)
-            
-            elif e.getKeyCode() == 78:
-                game.dino.setIsNaruto(True)
+                
         else:
             if e.getKeyCode() == 32:
                 self.welcome.start()
@@ -103,12 +101,14 @@ class Game():
         self.score = 0
         self.count = 0
         registerAct(self.onAct)
-        
+  
         self.dino = Dino()
         addActor(self.dino, Location(175, 325))
         
-        addActor(Floor(), Location(500, 375))
+        addActor(Score(), Location(50, 15))
         
+        addActor(Floor(), Location(500, 375))
+               
         setSimulationPeriod(CONS.SPEED)
         doRun()
         
@@ -116,7 +116,7 @@ class Game():
         addActor(Floor(), Location(1450, 375))
 
     def onAct(self):
-        CONS.OBJ_SPEED += 0.0001  
+        ######CONS.OBJ_SPEED += 0.0001  
               
         if self.count == 40:
             
@@ -169,7 +169,6 @@ class Floor(Actor):
 #dino actor class, inherits functions from existing actor class
 class Dino(Actor):
     def __init__(self):
-        self.isNaruto = False
         self.isJumping = False
         self.jmpMaxReached = False
         self.jmpAnimation = 1
@@ -195,10 +194,7 @@ class Dino(Actor):
     
     def act(self):
         if self.isJumping:
-            if not self.isNaruto:
-                self.show(4)
-            else:
-                self.show(0) #naruto pic here
+            self.show(4)
             
             if self.getY() > CONS.JMP_MAX and not self.jmpMaxReached:
                 self.jmpAnimation += 0.5
@@ -218,37 +214,22 @@ class Dino(Actor):
                 self.py = self.py + (self.vy - self.jmpAnimation) * self.dt
                 self.setLocation(Location(int(self.px), int(self.py)))
                 
-                if not self.isNaruto:
-                    self.show(0)
-                else:
-                    self.show(0) #naruto pic here
+                self.show(0)
                                             
         elif self.isDucking:
             self.setLocation(Location(175, 343))
             if self.getIdVisible() != 2:
-                if not self.isNaruto:
-                    self.show(2)
-                else:
-                    self.show(0) #naruto pic here
+                self.show(2)
             else:
-                if not self.isNaruto:
-                    self.show(3)
-                else:
-                    self.show(0) #naruto pic here  
+                self.show(3)
     
         else:
             self.setLocation(Location(175, 325))
             #playTone([("c'e'g'f''g'e'c'", 50)])
             if self.getIdVisible() != 1:
-                if not self.isNaruto:
-                    self.show(1)
-                else:
-                    self.show(0) #naruto pic here
+                self.show(1)
             else:
-                if not self.isNaruto:
-                    self.show(0)
-                else:
-                    self.show(0) #naruto pic here
+                self.show(0)
 
 
     def setIsJumping(self, isJumping):
@@ -256,9 +237,6 @@ class Dino(Actor):
 
     def setIsDucking(self, isDucking):
         self.isDucking = isDucking
-        
-    def setIsNaruto(self, isNaruto):
-        self.isNaruto = isNaruto
 
     def addColActor(self, actor):
         self.addCollisionActor(actor)
@@ -271,7 +249,14 @@ class Cactus(Actor):
                               "sprites/cactus_3.png",
                               "sprites/cactus_4.png"])
         self.vx = 10
-        self.show(random.randint(0, 3))
+        img = random.randint(0,3)
+        self.show(img)
+        
+        ##not working atm
+        if img == 2:
+            print("small called")
+            self.setY(346)
+            self.py = 346
 
     def reset(self):
         self.px = self.getX()
@@ -287,7 +272,7 @@ class Cactus(Actor):
         self.destroy()
 
     def destroy(self):
-        if self.getX <= 900 and not self.isInGrid():
+        if self.getX() <= 900 and not self.isInGrid():
             self.removeSelf()
 
 #bird actor class, inherits functions from existing actor class
@@ -317,8 +302,16 @@ class Bird(Actor):
         self.destroy()
 
     def destroy(self):
-        if self.getX <= 900 and not self.isInGrid():
+        if self.getX() <= 900 and not self.isInGrid():
             self.removeSelf()
+
+class Score(Actor):
+    def __init__(self):
+        Actor.__init__(self, "sprites/score.png")
+        self.show()
+    
+    def act(self):
+        print("score act")
 
 #dino on welcome screen
 class DinoWelcome(Actor):
