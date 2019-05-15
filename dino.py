@@ -1,16 +1,3 @@
-'''
-===================================
-== Authors:          Manta Tanisha,
-==                   ... Besnik,
-==                   ... Chiara
-== Project:          PyDino
-== Filename:         dino.py
-== Created @:        7. April 2019
-== Last modified @:  10. April 2019
-===================================
-'''
-
-
 import sys
 import random
 from gamegrid import *
@@ -26,7 +13,8 @@ class CONS():
     JMP_KEY = 32
     JMP_MAX = 75
     DUK_KEY = 40
-    BIRD_Y  = 200
+    BIRD_Y  = 260
+    BIRD_Y_2 = 320
     BTN_W   = 200
 
 #main class
@@ -105,7 +93,7 @@ class Game():
         self.dino = Dino()
         addActor(self.dino, Location(175, 325))
         
-        addActor(Score(), Location(50, 15))
+        addActor(Score(), Location(60, 20))
         
         addActor(Floor(), Location(500, 375))
                
@@ -116,21 +104,26 @@ class Game():
         addActor(Floor(), Location(1450, 375))
 
     def onAct(self):
-        ######CONS.OBJ_SPEED += 0.0001  
+        #####CONS.OBJ_SPEED += 0.0001  
               
         if self.count == 40:
             
             if random.randint(1, 2) == 1:
-                print("called")
                 for i in range(0, random.randint(1, 3)):
-                    print("entered loop")
                     cactus = Cactus()
                     addActor(cactus, Location(int(CONS.GAME_W + (i * 50)), 322))
                     self.dino.addColActor(cactus)
             
             else:
                 bird = Bird()
-                addActor(bird, Location(int(CONS.GAME_W + 20), 260))
+                birdY = random.randint(0,1)
+                
+                if birdY == 0:
+                    posY = CONS.BIRD_Y
+                else:
+                    posY = CONS.BIRD_Y_2
+                    
+                addActor(bird, Location(int(CONS.GAME_W + 20), posY))
                 self.dino.addColActor(bird)  
         
             self.count = 0
@@ -170,10 +163,9 @@ class Floor(Actor):
 class Dino(Actor):
     def __init__(self):
         self.isJumping = False
-        self.jmpMaxReached = False
-        self.jmpAnimation = 1
         self.isDucking = False
-        self.vy = 10
+        self.vy = -25
+        self.gravity = 2.3
         
         Actor.__init__(self, ["sprites/dino_w_1.png",
                               "sprites/dino_w_2.png",
@@ -187,6 +179,7 @@ class Dino(Actor):
         
                               
     def collide(self, a1, a2):
+        getBg().clear()
         removeAllActors()
         doPause()
         GameOver()
@@ -194,27 +187,18 @@ class Dino(Actor):
     
     def act(self):
         if self.isJumping:
-            self.show(4)
+            self.py += self.vy
             
-            if self.getY() > CONS.JMP_MAX and not self.jmpMaxReached:
-                self.jmpAnimation += 0.5
-                self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
-                self.py = self.py - (self.vy - self.jmpAnimation) * self.dt
-                self.setLocation(Location(int(self.px), int(self.py)))
-                
-            elif self.getY() >= 310:
-                self.jmpMaxReached = False
+            if self.py > 325:
+                self.py = 325
+                self.vy = -25
                 self.isJumping = False
-                self.jmpAnimation = 1
-            
-            else:
-                self.jmpAnimation -= 0.5
-                self.jmpMaxReached = True
-                self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
-                self.py = self.py + (self.vy - self.jmpAnimation) * self.dt
-                self.setLocation(Location(int(self.px), int(self.py)))
-                
                 self.show(0)
+            else:
+                self.show(4)
+            
+            self.setLocation(Location(int(self.px), int(self.py)))
+            self.vy += self.gravity
                                             
         elif self.isDucking:
             self.setLocation(Location(175, 343))
@@ -231,10 +215,9 @@ class Dino(Actor):
             else:
                 self.show(0)
 
-
     def setIsJumping(self, isJumping):
         self.isJumping = isJumping
-
+            
     def setIsDucking(self, isDucking):
         self.isDucking = isDucking
 
@@ -251,16 +234,15 @@ class Cactus(Actor):
         self.vx = 10
         img = random.randint(0,3)
         self.show(img)
-        
-        ##not working atm
-        if img == 2:
-            print("small called")
-            self.setY(346)
-            self.py = 346
 
     def reset(self):
         self.px = self.getX()
-        self.py = self.getY()
+        
+        if self.getIdVisible() == 2:
+            print("small called")
+            self.py = 335
+        else:
+            self.py = self.getY()
         
     def act(self):
         self.movePhysically()
@@ -307,11 +289,16 @@ class Bird(Actor):
 
 class Score(Actor):
     def __init__(self):
+        self.score = 0
+        
         Actor.__init__(self, "sprites/score.png")
         self.show()
     
     def act(self):
-        print("score act")
+        getBg().clear()
+        getBg().setPaintColor(Color.white)
+        getBg().drawText(str(int(round(self.score / 10, 0))), Point(115, 31))
+        self.score += 1
 
 #dino on welcome screen
 class DinoWelcome(Actor):
