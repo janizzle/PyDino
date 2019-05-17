@@ -3,13 +3,12 @@ import random
 from gamegrid import *
 import json
 
-#constants class
+# Konstanten
 class CONS():
     GAME_W  = 1000
     GAME_H  = 400
     SPEED   = 100
     OBJ_SPEED = 0.05
-    DELAY   = 1
     JMP_KEY = 32
     JMP_MAX = 75
     DUK_KEY = 40
@@ -17,10 +16,12 @@ class CONS():
     BIRD_Y_2 = 320
     BTN_W   = 200
 
-#main class
+# Hauptklasse
 class Main():
     def __init__(self):
         self.isInGame = False
+        
+        #Fenster erstellen, Hintergrundfarbe setzen, keybindings usw...
         makeGameGrid(CONS.GAME_W,
                          CONS.GAME_H,
                          1,
@@ -31,62 +32,67 @@ class Main():
                          keyReleased = self.keyReleased)
                          
         setTitle("PyDino")
-        show()
-        self.welcome = Welcome()
-        
+        show() #Fenster anzeigen
+        self.welcome = Welcome() #Willkommensklasse aufrufen
+    
+    #Funktion welche Key-Inputs abfängt
     def keyPressed(self, e):
+        #Befinden wir uns im Spiel?
         if self.isInGame:
-            if e.getKeyCode() == 32:
-                game.dino.setIsJumping(True)
+            if e.getKeyCode() == 32 or e.getKeyCode() == 38: #Leertaste oder pfeil nach oben gedrückt
+                game.dino.setIsJumping(True) #Dino am springen auf true setzen
             
-            elif e.getKeyCode() == 40:
-                game.dino.setIsDucking(True)
+            elif e.getKeyCode() == 40: #Pfeil nach unten gedrückt
+                game.dino.setIsDucking(True) #Dino geduckt auf true setzen
                 
         else:
-            if e.getKeyCode() == 32:
-                self.welcome.start()
-            
+            if e.getKeyCode() == 32: #Leertaste gedrückt
+                self.welcome.start() #Spiel starten
+    
+    #Funktion welche Key-Releases abfängt       
     def keyReleased(self, e):
+        #Befinden wir uns im Spiel?
         if self.isInGame:
-            game.dino.setIsDucking(False)
+            game.dino.setIsDucking(False) #Dino geduckt auf false setzen
 
-#welcome screen class
+#Willkommensklasse
+#
 class Welcome():
+    
+    #Eine Instanz der Klasse wurde erstellt
+    #Objekt wird aufgebaut
     def __init__(self):
+        #Wilkommenstext
         self.txtWelcome = Text(0)
         addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
         
+        #Dino auf dem willkommens bild
         self.dinoWelcome = DinoWelcome()
         addActor(self.dinoWelcome, Location(int(CONS.GAME_W / 2), 175))
         
+        #Button für neues Spiel
         self.btnNew = Button(0)
         addActor(self.btnNew, Location(int(CONS.GAME_W / 2 - 110), 275))
         self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick)
         
-        self.btnScores = Button(1)
-        addActor(self.btnScores, Location(int(CONS.GAME_W / 2 + 110), 275))
-        self.btnScores.addMouseTouchListener(self.highscores, GGMouse.lClick)
-        
+        #Blinkender Start-Text
         self.txtStart = Text(1)
         addActor(self.txtStart, Location(int(CONS.GAME_W / 2), 325))
-
+        
+        #Simulation starten
         setSimulationPeriod(500)
         doRun()
         
-    
+    #Spiel starten
     def start(self, *args):
         removeAllActors()
         doPause()
         game.initGame()
-    
-    def highscores(self, *args):
-        print(args)
 
 #game controller class
 class Game():
     def initGame(self):
         main.isInGame = True #solve this shit with set/get
-        self.score = 0
         self.count = 0
         registerAct(self.onAct)
   
@@ -104,8 +110,6 @@ class Game():
         addActor(Floor(), Location(1450, 375))
 
     def onAct(self):
-        #####CONS.OBJ_SPEED += 0.0001  
-              
         if self.count == 40:
             
             if random.randint(1, 2) == 1:
@@ -315,10 +319,7 @@ class DinoWelcome(Actor):
 #button component
 class Button(Actor):
     def __init__(self, sprite):
-        Actor.__init__(self, ["sprites/new.png",
-                              "sprites/scores.png",
-                              "sprites/save.png",
-                              "sprites/cancel.png"])
+        Actor.__init__(self, ["sprites/new.png"])
         self.show(sprite)
 
 #text component (sprites as text)
