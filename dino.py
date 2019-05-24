@@ -21,7 +21,6 @@ class Main():
     def __init__(self):
         self.isInGame = False
         
-        #Fenster erstellen, Hintergrundfarbe setzen, keybindings usw...
         makeGameGrid(CONS.GAME_W,
                          CONS.GAME_H,
                          1,
@@ -32,67 +31,51 @@ class Main():
                          keyReleased = self.keyReleased)
                          
         setTitle("PyDino")
-        show() #Fenster anzeigen
-        self.welcome = Welcome() #Willkommensklasse aufrufen
-    
-    #Funktion welche Key-Inputs abfängt
+        show()
+        self.welcome = Welcome()
+
     def keyPressed(self, e):
-        #Befinden wir uns im Spiel?
         if self.isInGame:
-            if e.getKeyCode() == 32 or e.getKeyCode() == 38: #Leertaste oder pfeil nach oben gedrückt
-                game.dino.setIsJumping(True) #Dino am springen auf true setzen
+            if e.getKeyCode() == 32 or e.getKeyCode() == 38:
+                game.dino.setIsJumping(True)
             
-            elif e.getKeyCode() == 40: #Pfeil nach unten gedrückt
-                game.dino.setIsDucking(True) #Dino geduckt auf true setzen
+            elif e.getKeyCode() == 40:
+                game.dino.setIsDucking(True)
                 
         else:
-            if e.getKeyCode() == 32: #Leertaste gedrückt
-                self.welcome.start() #Spiel starten
-    
-    #Funktion welche Key-Releases abfängt       
+            if e.getKeyCode() == 32:
+                self.welcome.start()
+                     
     def keyReleased(self, e):
-        #Befinden wir uns im Spiel?
         if self.isInGame:
-            game.dino.setIsDucking(False) #Dino geduckt auf false setzen
+            game.dino.setIsDucking(False)
 
-#Willkommensklasse
-#
 class Welcome():
-    
-    #Eine Instanz der Klasse wurde erstellt
-    #Objekt wird aufgebaut
     def __init__(self):
-        #Wilkommenstext
         self.txtWelcome = Text(0)
         addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
-        
-        #Dino auf dem willkommens bild
+
         self.dinoWelcome = DinoWelcome()
         addActor(self.dinoWelcome, Location(int(CONS.GAME_W / 2), 175))
-        
-        #Button für neues Spiel
+
         self.btnNew = Button(0)
-        addActor(self.btnNew, Location(int(CONS.GAME_W / 2 - 110), 275))
+        addActor(self.btnNew, Location(int(CONS.GAME_W / 2), 275))
         self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick)
-        
-        #Blinkender Start-Text
+
         self.txtStart = Text(1)
         addActor(self.txtStart, Location(int(CONS.GAME_W / 2), 325))
-        
-        #Simulation starten
+
         setSimulationPeriod(500)
         doRun()
-        
-    #Spiel starten
+
     def start(self, *args):
         removeAllActors()
         doPause()
         game.initGame()
 
-#game controller class
 class Game():
     def initGame(self):
-        main.isInGame = True #solve this shit with set/get
+        main.isInGame = True
         self.count = 0
         registerAct(self.onAct)
   
@@ -120,13 +103,8 @@ class Game():
             
             else:
                 bird = Bird()
-                birdY = random.randint(0,1)
-                
-                if birdY == 0:
-                    posY = CONS.BIRD_Y
-                else:
-                    posY = CONS.BIRD_Y_2
-                    
+                posY = random.randint(260, 350)
+                                    
                 addActor(bird, Location(int(CONS.GAME_W + 20), posY))
                 self.dino.addColActor(bird)  
         
@@ -213,7 +191,7 @@ class Dino(Actor):
     
         else:
             self.setLocation(Location(175, 325))
-            #playTone([("c'e'g'f''g'e'c'", 50)])
+
             if self.getIdVisible() != 1:
                 self.show(1)
             else:
@@ -243,7 +221,6 @@ class Cactus(Actor):
         self.px = self.getX()
         
         if self.getIdVisible() == 2:
-            print("small called")
             self.py = 335
         else:
             self.py = self.getY()
@@ -340,8 +317,24 @@ class Text(Actor):
 class GameOver():
     def __init__(self):
         global game
-        print("game over")
         del game
+        
+        self.txtWelcome = Text(0)
+        addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
+
+        self.btnNew = Button(0)
+        addActor(self.btnNew, Location(int(CONS.GAME_W / 2), 275))
+        self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick)
+
+        self.txtStart = Text(1)
+        addActor(self.txtStart, Location(int(CONS.GAME_W / 2), 325))
+
+        setSimulationPeriod(500)
+        doRun()
+        
+    def start(self):
+        return
+        
 
 #Highscores screen
 class Highscores():
