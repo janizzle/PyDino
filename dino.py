@@ -1,7 +1,6 @@
 import sys
 import random
 from gamegrid import *
-import json
 
 # Konstanten
 class CONS():
@@ -12,9 +11,10 @@ class CONS():
     JMP_KEY = 32
     JMP_MAX = 75
     DUK_KEY = 40
-    BIRD_Y  = 260
-    BIRD_Y_2 = 320
+    BIRD_Y_HIGH  = 260
+    BIRD_Y_LOW = 320
     BTN_W   = 200
+    VEL_X = 10
 
 # Hauptklasse
 class Main():
@@ -80,19 +80,19 @@ class Game():
         registerAct(self.onAct)
   
         self.dino = Dino()
-        addActor(self.dino, Location(175, 325))
-        
-        addActor(Score(), Location(60, 20))
-        
-        addActor(Floor(), Location(500, 375))
+        addActor(self.dino, Location(175, 325)) #add dino to scene        
+        addActor(Score(), Location(60, 20)) #add score count
+        addActor(Floor(), Location(500, 375)) #add initial floor
                
-        setSimulationPeriod(CONS.SPEED)
-        doRun()
+        setSimulationPeriod(CONS.SPEED) #set simulation speed
+        doRun() #start simulation
         
     def newFloor(self):
         addActor(Floor(), Location(1450, 375))
 
     def onAct(self):
+        CONS.OBJ_SPEED += 0.0001
+        
         if self.count == 40:
             
             if random.randint(1, 2) == 1:
@@ -103,9 +103,13 @@ class Game():
             
             else:
                 bird = Bird()
-                posY = random.randint(260, 350)
-                                    
-                addActor(bird, Location(int(CONS.GAME_W + 20), posY))
+                
+                if random.randint(1, 2) == 1:
+                    addActor(bird, Location(int(CONS.GAME_W + 20), CONS.BIRD_Y_HIGH))
+                    
+                else:                                                                                                       
+                    addActor(bird, Location(int(CONS.GAME_W + 20), CONS.BIRD_Y_LOW))
+                
                 self.dino.addColActor(bird)  
         
             self.count = 0
@@ -120,23 +124,23 @@ class Floor(Actor):
         self.floorOrdered = False
         self.show()
 
+    #get initial position of floor
     def reset(self):
         self.px = self.getX()
-        self.py = self.getY()   
+        self.py = self.getY()
 
     def act(self):
-        self.movePhysically()
-    
-    def movePhysically(self):
         self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
         self.px = self.px - self.vx * self.dt
         self.setLocation(Location(int(self.px), int(self.py)))
         self.destroy()
         
+        #if floor about to move off screen
         if self.getX() <= 500 and not self.floorOrdered:
-            self.floorOrdered = True
-            game.newFloor()
+            self.floorOrdered = True #prevent from ordering more than one floor
+            game.newFloor() #order a new floor on main game function
     
+    #destroy floor if moved off screen
     def destroy(self):
         if self.px == -500:
             self.removeSelf()
@@ -197,12 +201,15 @@ class Dino(Actor):
             else:
                 self.show(0)
 
+    #set if dino is jumping or not
     def setIsJumping(self, isJumping):
         self.isJumping = isJumping
-            
+    
+    #set if dino is ducking or not
     def setIsDucking(self, isDucking):
         self.isDucking = isDucking
 
+    #add a new collision actor to dino
     def addColActor(self, actor):
         self.addCollisionActor(actor)
 
@@ -251,18 +258,15 @@ class Bird(Actor):
         self.py = self.getY()
 
     def act(self):    
-        self.movePhysically()
+        self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
+        self.px = self.px - self.vx * self.dt
+        self.setLocation(Location(int(self.px), int(self.py)))
+        self.destroy()
         
         if self.getIdVisible() == 0:
             self.show(1)
         else:
             self.show(0)
-    
-    def movePhysically(self):
-        self.dt = CONS.OBJ_SPEED * getSimulationPeriod()
-        self.px = self.px - self.vx * self.dt
-        self.setLocation(Location(int(self.px), int(self.py)))
-        self.destroy()
 
     def destroy(self):
         if self.getX() <= 900 and not self.isInGrid():
@@ -334,12 +338,6 @@ class GameOver():
         
     def start(self):
         return
-        
-
-#Highscores screen
-class Highscores():
-    def __init__(self):
-        return 0
         
 if __name__ == '__main__':
     main = Main()
