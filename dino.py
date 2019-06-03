@@ -18,6 +18,10 @@ class CONS():
 #Main class
 class Main():
     def __init__(self):
+        self.buildGameGrid()
+        self.welcome = Welcome()
+        
+    def buildGameGrid(self):
         self.game = Game()
         self.isInGame = False
         
@@ -33,7 +37,7 @@ class Main():
             
         setTitle("PyDino")
         show()
-        self.welcome = Welcome()
+        
 
     #key pressed down
     def keyPressed(self, e):
@@ -376,7 +380,8 @@ class Text(Actor):
 #Game over screen
 class GameOver():
     def __init__(self):
-        main.isInGame = False #set player is not in game
+        dispose()
+        main.buildGameGrid()
         
         self.txtWelcome = Text(0)
         addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
