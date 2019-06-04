@@ -1,28 +1,32 @@
 import sys
-import random #import random
-from gamegrid import * #import gamegrid
+import random
+from gamegrid import * #from gamegrid import everything
 
 #Constants
 class CONS():
-    GAME_W       = 1000
-    GAME_H       = 400
-    SPEED        = 100
-    SPACE_KEY    = 32
-    UP_KEY       = 38
-    DOWN_KEY     = 40
-    GRAVITY      = 2.3
-    BIRD_Y_HIGH  = 260
-    BIRD_Y_LOW   = 320
-    VEL_X        = 50
+    GAME_W       = 1000 #window width
+    GAME_H       = 400  #window height
+    SPEED        = 100  #game speed
+    SPACE_KEY    = 32   #keycode for space
+    UP_KEY       = 38   #keycode for up
+    DOWN_KEY     = 40   #keycode for down
+    GRAVITY      = 2.3  #gravity
+    BIRD_Y_HIGH  = 260  #bird position Y (high)
+    BIRD_Y_LOW   = 320  #bird position Y (low)
+    VEL_X        = 50   #default velocity X
 
 #Main class
 class Main():
     def __init__(self):
+        self.highscore = 0
+        self.score = 0
+        self.gridPosition = Point(10, 10)
         self.buildGameGrid()
         self.welcome = Welcome()
-        
+    
+    #builds our game window
     def buildGameGrid(self):
-        self.game = Game()
+        self.game = Game() 
         self.isInGame = False
         
         #create game window and set background
@@ -34,7 +38,8 @@ class Main():
                      False,
                      keyPressed = self.keyPressed, #any key pressed -> bind to keyPressed function
                      keyReleased = self.keyReleased) #any key released -> bind to keyReleased function
-            
+        
+        setPosition(int(self.gridPosition.getX()), int(self.gridPosition.getY()))
         setTitle("PyDino")
         show()
         
@@ -45,11 +50,11 @@ class Main():
         if self.isInGame:
             #space or key up pressed
             if e.getKeyCode() == CONS.SPACE_KEY or e.getKeyCode() == CONS.UP_KEY:
-                main.game.dino.setIsJumping(True) #set dino jumping
+                self.game.dino.setIsJumping(True) #set dino jumping
             
             #key down pressed
             elif e.getKeyCode() == CONS.DOWN_KEY:
-                main.game.dino.setIsDucking(True) #set dino ducking
+                self.game.dino.setIsDucking(True) #set dino ducking
         
         #not in game   
         else:
@@ -61,28 +66,25 @@ class Main():
     def keyReleased(self, e):
         #key down released and in game
         if self.isInGame and e.getKeyCode() == CONS.DOWN_KEY:
-            main.game.dino.setIsDucking(False) #set dino not ducking
+            self.game.dino.setIsDucking(False) #set dino not ducking
 
 
 #Welcome screen class
 class Welcome():
     def __init__(self):
         #add welcome text to game grid
-        self.txtWelcome = Text(0)
-        addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
+        addActor(Text(0), Location(int(CONS.GAME_W / 2), 80))
         
         #add welcome dino to game grid
-        self.dinoWelcome = DinoWelcome()
-        addActor(self.dinoWelcome, Location(int(CONS.GAME_W / 2), 175))
+        addActor(DinoWelcome(), Location(int(CONS.GAME_W / 2), 175))
 
         #add "new game" button to game grid
         self.btnNew = Button(0)
         addActor(self.btnNew, Location(int(CONS.GAME_W / 2), 275))
-        self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick)
+        self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick) #add mouse touch listener to "new game" button
 
         #add blinking start text to game grid
-        self.txtStart = Text(1)
-        addActor(self.txtStart, Location(int(CONS.GAME_W / 2), 325))
+        addActor(Text(1), Location(int(CONS.GAME_W / 2), 325))
 
         #start welcome screen simulation
         setSimulationPeriod(500)
@@ -90,21 +92,21 @@ class Welcome():
 
     #game started
     def start(self, *args):
-        removeAllActors()
-        doPause()
         main.game.initGame()
 
 class Game():        
     def initGame(self):
+        removeAllActors()
         registerAct(self.onAct)
         main.isInGame = True
         self.spaceCount = 0
         self.objSpace = 40
   
         self.dino = Dino() #init new dino
-        addActor(self.dino, Location(175, 325)) #add dino to scene        
-        addActor(Score(), Location(60, 20)) #add score count
+        addActor(self.dino, Location(175, 325)) #add dino to scene       
         addActor(Floor(), Location(500, 375)) #add initial floor
+        addActor(Score(), Location(60, 20)) #add score count
+        addActor(Highscore(), Location(800, 24)) #add highscore count
                
         setSimulationPeriod(CONS.SPEED) #set simulation speed
         doRun() #start simulation
@@ -114,8 +116,7 @@ class Game():
         addActor(Floor(), Location(1450, 375))
     
     #on act function, callback for act function
-    def onAct(self):
-        
+    def onAct(self):    
         #if object should be made
         if self.spaceCount == self.objSpace:
             
@@ -199,15 +200,12 @@ class Dino(Actor):
     def reset(self):
         self.px = self.getX()
         self.py = self.getY()
-    
-    
-    #THIS SHIT STILL UGLY
+        
     #dino collided with other actor --> game over                          
     def collide(self, *args):
-        getBg().clear()
-        removeAllActors()
-        doReset()
-        GameOver()
+        main.gridPosition = getPosition()
+        dispose() #dispose game window
+        GameOver() #show game over screen
         return 0
     
     #dino act class
@@ -322,13 +320,6 @@ class Bird(Actor):
         if self.getX() <= 900 and not self.isInGrid():
             self.removeSelf()
 
-
-
-
-#---------------------------------------------------------
-
-
-
 #score actor class
 class Score(Actor):
     def __init__(self):
@@ -338,10 +329,27 @@ class Score(Actor):
         self.show()
     
     def act(self):
-        getBg().clear() #clear score count
         getBg().setPaintColor(Color.white)
         getBg().drawText(str(int(round(self.score / 10, 0))), Point(115, 31)) #draw score count
+        main.score = int(round(self.score / 10, 0))
         self.score += 1 #add one to score
+        
+class Highscore(Actor):
+    def __init__(self):
+        Actor.__init__(self, "sprites/highscore.png")
+        self.show()
+    
+    def act(self):
+        getBg().clear() #clear background to prevent overwriting
+        getBg().setPaintColor(Color.white)
+        
+        #if highscore greater than score -> display highscore
+        if main.highscore > main.score:
+            getBg().drawText(str(int(main.highscore)), Point(883, 31))
+            
+        #else display current score
+        else:
+            getBg().drawText(str(int(main.score)), Point(883, 31))
 
 #dino on welcome screen
 class DinoWelcome(Actor):
@@ -356,6 +364,13 @@ class DinoWelcome(Actor):
     def act(self):
         self.showNextSprite() #loops through sprites
 
+#dino on over screen
+class DinoOver(Actor):
+    def __init__(self):
+        Actor.__init__(self, ["sprites/dino_over.png"])
+        self.show()
+
+
 #button component
 class Button(Actor):
     def __init__(self, sprite):
@@ -367,7 +382,12 @@ class Text(Actor):
     def __init__(self, sprite):
         Actor.__init__(self, ["sprites/welcome.png",
                               "sprites/start.png",
-                              "sprites/start_b.png"])
+                              "sprites/start_b.png",
+                              "sprites/game_over.png",
+                              "sprites/new_highscore.png",
+                              "sprites/new_highscore_b.png",
+                              "sprites/your_score.png",
+                              "sprites/highest_score.png"])
         self.show(sprite)
     
     #blinking start text animation
@@ -376,31 +396,46 @@ class Text(Actor):
             self.show(2)
         elif self.getIdVisible() == 2:
             self.show(1)
+            
+        if self.getIdVisible() == 4:
+            self.show(5)
+        elif self.getIdVisible() == 5:
+            self.show(4)
 
 #Game over screen
 class GameOver():
     def __init__(self):
-        dispose()
+        #build new window
         main.buildGameGrid()
+                
+        addActor(DinoOver(), Location(130, 85))
+        addActor(Text(3), Location(int(CONS.GAME_W / 2), 50))
         
-        self.txtWelcome = Text(0)
-        addActor(self.txtWelcome, Location(int(CONS.GAME_W / 2), 80))
+        #if is new highscore
+        if main.highscore < main.score:
+            main.highscore = main.score
+            addActor(Text(4), Location(int(CONS.GAME_W / 2), 95))
+            
+        addActor(Text(6), Location(int(CONS.GAME_W / 2), 150))
+        getBg().setPaintColor(Color.white)
+        getBg().drawText(str(int(main.score)), Point(int(CONS.GAME_W / 2), 200))
+        
+        addActor(Text(7), Location(int(CONS.GAME_W / 2), 230))
+        getBg().drawText(str(int(main.highscore)), Point(int(CONS.GAME_W / 2), 280))
 
         self.btnNew = Button(0)
-        addActor(self.btnNew, Location(int(CONS.GAME_W / 2), 275))
-        self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick)
+        addActor(self.btnNew, Location(int(CONS.GAME_W / 2), 330))
+        self.btnNew.addMouseTouchListener(self.start, GGMouse.lClick) #add mouse touch listener to "new game" button
 
-        self.txtStart = Text(1)
-        addActor(self.txtStart, Location(int(CONS.GAME_W / 2), 325))
-
+        addActor(Text(1), Location(int(CONS.GAME_W / 2), 375))
+        
         setSimulationPeriod(500)
         doRun()
-        
+    
+    #game started
     def start(self, *args):
-        removeAllActors()
+        getBg().clear()
         main.game.initGame()
-        return
-
 
 #init main class
 if __name__ == '__main__':
